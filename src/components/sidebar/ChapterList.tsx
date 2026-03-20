@@ -1,23 +1,32 @@
-const MOCK_CHAPTERS = [
-  { id: '1', title: 'Chapter 1 — The Beginning' },
-  { id: '2', title: 'Chapter 2 — Rising Action' },
-  { id: '3', title: 'Chapter 3 — The Turning Point' },
-]
+import type { DocumentHead } from '@/api/documents'
 
 interface ChapterListProps {
+  chapters: DocumentHead[]
   activeChapterId: string
+  isLoading: boolean
   onSelectChapter: (id: string) => void
+  onCreateChapter: () => void
 }
 
-export default function ChapterList({ activeChapterId, onSelectChapter }: ChapterListProps) {
+export default function ChapterList({
+  chapters,
+  activeChapterId,
+  isLoading,
+  onSelectChapter,
+  onCreateChapter
+}: ChapterListProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 0' }}>
-        {MOCK_CHAPTERS.map((chapter) => (
+        {isLoading && <div style={{ padding: '16px', color: '#999', fontSize: '12px' }}>Loading…</div>}
+        {!isLoading && chapters.length === 0 && (
+          <div style={{ padding: '16px', color: '#999', fontSize: '12px' }}>No chapters yet</div>
+        )}
+        {chapters.map((chapter) => (
           <button
             key={chapter.id}
             onClick={() => onSelectChapter(chapter.id)}
-            aria-label={chapter.title}
+            aria-label={chapter.name}
             style={{
               display: 'block',
               width: '100%',
@@ -30,19 +39,22 @@ export default function ChapterList({ activeChapterId, onSelectChapter }: Chapte
               fontSize: '14px',
             }}
           >
-            {chapter.title}
+            {chapter.name}
           </button>
         ))}
       </div>
       <div style={{ padding: '16px', borderTop: '1px solid #e5e5e5' }}>
         <button
+          onClick={onCreateChapter}
+          disabled={isLoading}
           style={{
             width: '100%',
             padding: '8px 16px',
             border: '1px solid #e5e5e5',
             background: 'white',
-            cursor: 'pointer',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
             fontSize: '14px',
+            opacity: isLoading ? 0.5 : 1,
           }}
         >
           + New Chapter

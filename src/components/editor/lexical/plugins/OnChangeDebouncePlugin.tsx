@@ -1,6 +1,6 @@
 import type {EditorState, LexicalEditor} from 'lexical';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { CAN_PUSH_COMMAND } from '../commands'
 
 const CAN_USE_DOM = typeof window !== 'undefined' && typeof window.document !== 'undefined' && typeof window.document.createElement !== 'undefined';
@@ -21,10 +21,11 @@ export function OnChangeDebouncePlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef(true);
 
   useLayoutEffect(() => {
     if (onChange) {
-      return editor.registerUpdateListener(
+      const unsubscribe = editor.registerUpdateListener(
         ({editorState, dirtyElements, dirtyLeaves, prevEditorState, tags}) => {
           if (dirtyElements.size > 0) {
             if (
@@ -40,14 +41,43 @@ export function OnChangeDebouncePlugin({
               clearTimeout(timerIdRef.current);
             }
             timerIdRef.current = setTimeout(() => {
-              editor.dispatchCommand(CAN_PUSH_COMMAND, true);
-              onChange(editor, editorState);
+              // Only execute if component is still mounted
+              if (isMountedRef.current) {
+                try {
+                  editor.dispatchCommand(CAN_PUSH_COMMAND, true);
+                  onChange(editor, editorState);
+                } catch (error) {
+                  // Silently ignore if editor context is gone
+                  console.debug('OnChangeDebouncePlugin: editor context unavailable', error);
+                }
+              }
             }, debounce);
           }
         },
       );
+
+      return () => {
+        // Cleanup on unmount
+        isMountedRef.current = false;
+        if (timerIdRef.current !== null) {
+          clearTimeout(timerIdRef.current);
+          timerIdRef.current = null;
+        }
+        unsubscribe();
+      };
     }
   }, [editor, ignoreHistoryMergeTagChange, ignoreSelectionChange, onChange, debounce]);
+
+  // Additional cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (timerIdRef.current !== null) {
+        clearTimeout(timerIdRef.current);
+        timerIdRef.current = null;
+      }
+    };
+  }, []);
 
   return null;
 }

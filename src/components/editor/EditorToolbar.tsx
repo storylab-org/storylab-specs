@@ -30,12 +30,6 @@ export default function EditorToolbar({
         </div>
       </div>
 
-      <div className="toolbar-section toolbar-center">
-        <div className="word-count-display">
-          {wordCount.toLocaleString()} words
-        </div>
-      </div>
-
       <div className="toolbar-section toolbar-right">
         <div className="export-menu-container">
           <button

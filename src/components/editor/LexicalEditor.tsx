@@ -20,22 +20,22 @@ import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 
-import ToolbarPlugin from './lexical/plugins/ToolbarPlugin';
 import AutoLinkPlugin from './lexical/plugins/AutoLinkPlugin';
-// TreeViewPlugin and TableOfContentsPlugin deferred - have dependency issues
-import { OnChangeDebouncePlugin } from './lexical/plugins/OnChangeDebouncePlugin';
+import TreeViewPlugin from './lexical/plugins/TreeViewPlugin';
+import FormattingToolbar from './FormattingToolbar';
+// ToolbarPlugin removed - causes "Unable to find active editor" errors on chapter switch
 
 import PlaygroundEditorTheme from './lexical/themes/PlaygroundEditorTheme';
 
 interface LexicalEditorProps {
-  namespace: string;
+  chapterId: string;
   initialContent?: string;
   language?: string;
   onContentChange?: (serialisedState: string, wordCount: number) => void;
 }
 
 const LexicalEditor: React.FC<LexicalEditorProps> = ({
-  namespace,
+  chapterId,
   initialContent,
   language = 'en',
   onContentChange,
@@ -43,12 +43,13 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
   const [wordCount, setWordCount] = useState<number>(0);
   const theme = PlaygroundEditorTheme;
 
-  function onChange(_editorState: EditorState, _editor: LexicalEditorType, _tags: Set<string>) {
-    // Handle immediate changes if needed
-  }
-
-  function onChangeDebounce(_editor: LexicalEditorType, editorState: EditorState) {
+  function onChange(editorState: EditorState, _editor: LexicalEditorType, tags: Set<string>) {
+    // Immediately serialise and report state changes
     const serialisedState = JSON.stringify(editorState.toJSON());
+    const isInitialisation = tags.has('hydration');
+    console.log(
+      `[LEXICAL] Editor state changed ${isInitialisation ? '(init)' : '(user edit)'}: ${serialisedState.length} bytes`
+    );
     if (onContentChange) {
       onContentChange(serialisedState, wordCount);
     }
@@ -72,6 +73,7 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
     );
   }
 
+
   function Placeholder() {
     return <div className="editor-placeholder">Empty document ...</div>;
   }
@@ -80,12 +82,24 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
     console.error(error);
   }
 
-  const initialEditorState = initialContent ? JSON.stringify(JSON.parse(initialContent)) : undefined;
+  let initialEditorState: string | undefined = undefined;
+  if (initialContent) {
+    try {
+      const parsed = JSON.parse(initialContent);
+      initialEditorState = JSON.stringify(parsed);
+      console.log(`[LEXICAL] Parsed initialContent: ${initialContent.length} bytes → ${initialEditorState.length} bytes`);
+    } catch (error) {
+      console.error(`[LEXICAL] Failed to parse initialContent:`, error);
+    }
+  } else {
+    console.log(`[LEXICAL] No initialContent provided`);
+  }
 
   return (
     <LexicalComposer
+      key={chapterId}
       initialConfig={{
-        namespace,
+        namespace: chapterId,
         editorState: initialEditorState,
         nodes: [
           HeadingNode,
@@ -104,7 +118,7 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
         onError,
       }}
     >
-      <ToolbarPlugin />
+      <FormattingToolbar />
       <div className="editor-container">
         <RichTextPlugin
           contentEditable={<ContentEditable className="editor-input" />}
@@ -112,11 +126,11 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
           ErrorBoundary={LexicalErrorBoundary}
         />
         <OnChangePlugin onChange={onChange} />
-        <OnChangeDebouncePlugin debounce={1000} onChange={onChangeDebounce} />
         <HistoryPlugin />
         <ListPlugin />
         <LinkPlugin />
         <AutoLinkPlugin />
+        <TreeViewPlugin />
       </div>
       <WordCountPlugin />
     </LexicalComposer>
