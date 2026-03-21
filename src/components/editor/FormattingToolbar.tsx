@@ -1,5 +1,6 @@
+import { useCallback, useEffect, useState } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND, UNDO_COMMAND, REDO_COMMAND } from 'lexical'
+import { FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND, UNDO_COMMAND, REDO_COMMAND, $getSelection, $isRangeSelection } from 'lexical'
 import { INSERT_UNORDERED_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND } from '@lexical/list'
 import {
   Bold,
@@ -18,10 +19,26 @@ import './FormattingToolbar.css'
 
 export default function FormattingToolbar() {
   const [editor] = useLexicalComposerContext()
+  const [isBold, setIsBold] = useState(false)
+  const [isItalic, setIsItalic] = useState(false)
+  const [isUnderline, setIsUnderline] = useState(false)
 
-  const handleFormat = (command: string, arg?: string) => {
+  const handleFormat = useCallback((command: string, arg?: string) => {
     editor.dispatchCommand(command as any, arg as any)
-  }
+  }, [editor])
+
+  useEffect(() => {
+    return editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection)) {
+          setIsBold(selection.hasFormat('bold'))
+          setIsItalic(selection.hasFormat('italic'))
+          setIsUnderline(selection.hasFormat('underline'))
+        }
+      })
+    })
+  }, [editor])
 
   return (
     <div className="formatting-toolbar">
@@ -46,7 +63,7 @@ export default function FormattingToolbar() {
       <button
         title="Bold (Ctrl+B)"
         onClick={() => handleFormat(FORMAT_TEXT_COMMAND, 'bold')}
-        className="format-btn"
+        className={`format-btn ${isBold ? 'active' : ''}`}
       >
         <Bold size={16} />
       </button>
@@ -54,7 +71,7 @@ export default function FormattingToolbar() {
       <button
         title="Italic (Ctrl+I)"
         onClick={() => handleFormat(FORMAT_TEXT_COMMAND, 'italic')}
-        className="format-btn"
+        className={`format-btn ${isItalic ? 'active' : ''}`}
       >
         <Italic size={16} />
       </button>
@@ -62,7 +79,7 @@ export default function FormattingToolbar() {
       <button
         title="Underline (Ctrl+U)"
         onClick={() => handleFormat(FORMAT_TEXT_COMMAND, 'underline')}
-        className="format-btn"
+        className={`format-btn ${isUnderline ? 'active' : ''}`}
       >
         <Underline size={16} />
       </button>

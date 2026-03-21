@@ -33,6 +33,17 @@
   background: #e0e0e0;
 }
 
+.format-btn.active {
+  background: #4a9eff;
+  color: white;
+  border-color: #2b7fcc;
+}
+
+.format-btn.active:hover {
+  background: #3a8ce5;
+  border-color: #1b6fbc;
+}
+
 .separator {
   width: 1px;
   height: 24px;

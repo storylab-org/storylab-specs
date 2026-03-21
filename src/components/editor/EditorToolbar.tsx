@@ -1,23 +1,23 @@
 import { useState } from 'react';
-import { Save, Download } from 'lucide-react';
+import { Check, Download, AlertCircle, Save } from 'lucide-react';
 import './EditorToolbar.css';
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface EditorToolbarProps {
   chapterId?: string;
   chapterTitle?: string;
-  onSave?: () => void;
   onExport?: (format: 'markdown' | 'html' | 'pdf') => void;
-  isSaving?: boolean;
-  wordCount?: number;
+  onSave?: () => void;
+  saveStatus?: SaveStatus;
 }
 
 export default function EditorToolbar({
   chapterId,
   chapterTitle = 'Untitled',
-  onSave,
   onExport,
-  isSaving = false,
-  wordCount = 0,
+  onSave,
+  saveStatus = 'idle',
 }: EditorToolbarProps) {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
@@ -31,6 +31,23 @@ export default function EditorToolbar({
       </div>
 
       <div className="toolbar-section toolbar-right">
+        <button
+          className="toolbar-button toolbar-button-primary"
+          onClick={onSave}
+          disabled={saveStatus === 'saving'}
+          aria-label="Save chapter"
+        >
+          {saveStatus === 'saving' && <Save size={18} />}
+          {saveStatus === 'saved' && <Check size={18} />}
+          {saveStatus === 'error' && <AlertCircle size={18} />}
+          {saveStatus === 'idle' && <Save size={18} />}
+
+          {saveStatus === 'saving' && 'Saving…'}
+          {saveStatus === 'saved' && 'Saved'}
+          {saveStatus === 'error' && 'Save failed'}
+          {saveStatus === 'idle' && 'Save'}
+        </button>
+
         <div className="export-menu-container">
           <button
             className="toolbar-button toolbar-button-secondary"
@@ -72,16 +89,6 @@ export default function EditorToolbar({
             </div>
           )}
         </div>
-
-        <button
-          className={`toolbar-button toolbar-button-primary ${isSaving ? 'saving' : ''}`}
-          onClick={onSave}
-          disabled={isSaving}
-          aria-label="Save document"
-        >
-          <Save size={18} />
-          {isSaving ? 'Saving...' : 'Save'}
-        </button>
       </div>
     </div>
   );

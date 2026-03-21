@@ -1,6 +1,5 @@
 import LexicalEditor from '@/components/editor/LexicalEditor'
 import EditorErrorBoundary from '@/components/editor/EditorErrorBoundary'
-import FormattingToolbar from '@/components/editor/FormattingToolbar'
 
 interface EditorAreaProps {
   chapterId: string

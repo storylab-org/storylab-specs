@@ -27,29 +27,51 @@ export function OnChangeDebouncePlugin({
     if (onChange) {
       const unsubscribe = editor.registerUpdateListener(
         ({editorState, dirtyElements, dirtyLeaves, prevEditorState, tags}) => {
-          if (dirtyElements.size > 0) {
-            if (
-              (ignoreSelectionChange &&
-                dirtyElements.size === 0 &&
-                dirtyLeaves.size === 0) ||
-              (ignoreHistoryMergeTagChange && tags.has('history-merge')) ||
-              prevEditorState.isEmpty()
-            ) {
-              return;
-            }
+          console.log('[DEBOUNCE] Update listener fired', {
+            dirtyElements: dirtyElements.size,
+            dirtyLeaves: dirtyLeaves.size,
+            prevEmpty: prevEditorState.isEmpty(),
+            hasHistoryMerge: tags.has('history-merge'),
+          });
+
+          // Skip if nothing actually changed (only selection)
+          if (ignoreSelectionChange && dirtyElements.size === 0 && dirtyLeaves.size === 0) {
+            console.log('[DEBOUNCE] Skipping: only selection changed');
+            return;
+          }
+
+          // Skip history-merge updates
+          if (ignoreHistoryMergeTagChange && tags.has('history-merge')) {
+            console.log('[DEBOUNCE] Skipping: history-merge tag');
+            return;
+          }
+
+          // Skip hydration (initial content load from initialEditorState)
+          if (prevEditorState.isEmpty()) {
+            console.log('[DEBOUNCE] Skipping: hydration (prev empty)');
+            return;
+          }
+
+          // Proceed if something changed (not selection-only, not history-merge, not hydration)
+          if (dirtyElements.size > 0 || dirtyLeaves.size > 0) {
+            console.log('[DEBOUNCE] Processing update, scheduling onChange callback');
             if (timerIdRef.current !== null) {
               clearTimeout(timerIdRef.current);
             }
             timerIdRef.current = setTimeout(() => {
+              console.log('[DEBOUNCE] setTimeout fired, checking if mounted...');
               // Only execute if component is still mounted
               if (isMountedRef.current) {
                 try {
+                  console.log('[DEBOUNCE] Component mounted, executing onChange callback');
                   editor.dispatchCommand(CAN_PUSH_COMMAND, true);
                   onChange(editor, editorState);
+                  console.log('[DEBOUNCE] onChange callback completed');
                 } catch (error) {
-                  // Silently ignore if editor context is gone
-                  console.debug('OnChangeDebouncePlugin: editor context unavailable', error);
+                  console.error('[DEBOUNCE] Error in onChange:', error);
                 }
+              } else {
+                console.log('[DEBOUNCE] Component not mounted, skipping onChange');
               }
             }, debounce);
           }

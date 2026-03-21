@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import type { DocumentHead } from '@/api/documents'
 
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
 interface DebugPanelProps {
   activeChapterId: string | null
   chapters: DocumentHead[]
   content: string
-  isSaving: boolean
+  saveStatus: SaveStatus
   isLoading: boolean
 }
 
@@ -13,7 +15,7 @@ export default function DebugPanel({
   activeChapterId,
   chapters,
   content,
-  isSaving,
+  saveStatus,
   isLoading
 }: DebugPanelProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -58,8 +60,8 @@ export default function DebugPanel({
             </div>
             <div>
               <strong>Status:</strong>{' '}
-              <span style={{ color: isSaving ? '#f0a000' : isLoading ? '#0066cc' : '#00aa00' }}>
-                {isSaving ? '💾 Saving' : isLoading ? '⏳ Loading' : '✓ Ready'}
+              <span style={{ color: saveStatus === 'saving' ? '#f0a000' : saveStatus === 'error' ? '#cc0000' : isLoading ? '#0066cc' : '#00aa00' }}>
+                {saveStatus === 'saving' ? '💾 Saving' : saveStatus === 'saved' ? '✓ Saved' : saveStatus === 'error' ? '✗ Error' : isLoading ? '⏳ Loading' : '✓ Ready'}
               </span>
             </div>
           </div>

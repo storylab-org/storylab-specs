@@ -2,22 +2,25 @@ import { useState, useEffect } from 'react'
 import Sidebar from '@/components/sidebar/Sidebar'
 import EditorArea from '@/components/editor/EditorArea'
 import EditorToolbar from '@/components/editor/EditorToolbar'
-import EditorErrorDisplay from '@/components/editor/EditorErrorDisplay'
 import DebugPanel from '@/components/editor/DebugPanel'
 import {
   listDocuments,
   getDocument,
   createDocument,
   updateDocument,
+  deleteDocument,
   type DocumentHead
 } from '@/api/documents'
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 export default function EditorLayout() {
   const [chapters, setChapters] = useState<DocumentHead[]>([])
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
   const [content, setContent] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isLoading, setIsLoading] = useState(true)
+  const [loadedChapterId, setLoadedChapterId] = useState<string | null>(null)
 
   const wordCount = content.split(/\s+/).filter(Boolean).length
   const activeChapter = chapters.find((c) => c.id === activeChapterId)
@@ -64,9 +67,11 @@ export default function EditorLayout() {
         const doc = await getDocument(activeChapterId)
         console.log(`[LOAD] ✓ Loaded chapter "${activeChapterId}" (name: "${doc.name}", ${doc.content.length} bytes)`)
         setContent(doc.content)
+        setLoadedChapterId(activeChapterId)
       } catch (error) {
         console.error(`[LOAD] ✗ Failed to load chapter "${activeChapterId}":`, error)
         setContent('')
+        setLoadedChapterId(activeChapterId)
       } finally {
         setIsLoading(false)
       }
@@ -75,20 +80,14 @@ export default function EditorLayout() {
     loadDocument()
   }, [activeChapterId])
 
-  const handleSave = async () => {
-    if (!activeChapterId) return
-
-    setIsSaving(true)
-    try {
-      console.log(`[SAVE] Saving chapter "${activeChapterId}" with ${content.length} bytes`)
-      await updateDocument(activeChapterId, content)
-      console.log(`[SAVE] ✓ Chapter "${activeChapterId}" saved successfully`)
-    } catch (error) {
-      console.error(`[SAVE] ✗ Failed to save chapter "${activeChapterId}":`, error)
-    } finally {
-      setIsSaving(false)
+  // Auto-save when content changes (OnChangePlugin updates state immediately)
+  useEffect(() => {
+    if (saveStatus === 'saved') {
+      // Reset to idle after 3 seconds
+      const timer = setTimeout(() => setSaveStatus('idle'), 3000)
+      return () => clearTimeout(timer)
     }
-  }
+  }, [saveStatus])
 
   const handleSelectChapter = (id: string) => {
     console.log(`[SWITCH] Switching to chapter "${id}"`)
@@ -97,7 +96,6 @@ export default function EditorLayout() {
 
   const handleCreateChapter = async () => {
     try {
-      setIsSaving(true)
       console.log('[CREATE] Creating new chapter...')
       const newChapter = await createDocument('New Chapter', '')
       console.log(`[CREATE] ✓ New chapter created with ID "${newChapter.id}"`)
@@ -113,8 +111,44 @@ export default function EditorLayout() {
       }
     } catch (error) {
       console.error('[CREATE] ✗ Failed to create chapter:', error)
-    } finally {
-      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteChapter = async (id: string) => {
+    try {
+      console.log(`[DELETE] Deleting chapter "${id}"...`)
+      await deleteDocument(id)
+      console.log(`[DELETE] ✓ Chapter "${id}" deleted`)
+
+      // Remove from chapters list
+      const updatedChapters = chapters.filter(c => c.id !== id)
+      setChapters(updatedChapters)
+
+      // If deleted chapter was active, select an adjacent chapter
+      if (activeChapterId === id) {
+        if (updatedChapters.length > 0) {
+          // Find the deleted chapter's index in the original list
+          const deletedIndex = chapters.findIndex(c => c.id === id)
+          // Prefer next chapter, otherwise fall back to previous
+          let nextChapterId: string
+          if (deletedIndex < updatedChapters.length) {
+            nextChapterId = updatedChapters[deletedIndex].id
+          } else {
+            nextChapterId = updatedChapters[updatedChapters.length - 1].id
+          }
+          console.log(`[DELETE] Active chapter deleted, switching to "${nextChapterId}"`)
+          setActiveChapterId(nextChapterId)
+        } else {
+          // No chapters remain, create a default "Untitled" chapter
+          console.log('[DELETE] No chapters remain, creating default "Untitled" chapter...')
+          const defaultChapter = await createDocument('Untitled', '')
+          console.log(`[DELETE] ✓ Created default chapter "${defaultChapter.id}"`)
+          setChapters([defaultChapter])
+          setActiveChapterId(defaultChapter.id)
+        }
+      }
+    } catch (error) {
+      console.error(`[DELETE] ✗ Failed to delete chapter "${id}":`, error)
     }
   }
 
@@ -123,14 +157,32 @@ export default function EditorLayout() {
     console.log('Exporting as:', format, content)
   }
 
+  const handleSave = async () => {
+    if (!activeChapterId) return
+
+    setSaveStatus('saving')
+    try {
+      console.log(`[SAVE] Saving chapter "${activeChapterId}"`)
+      console.log(`[SAVE] Content length: ${content.length} bytes`)
+      console.log(`[SAVE] Content preview: ${content.substring(0, 100)}`)
+      await updateDocument(activeChapterId, content)
+      console.log(`[SAVE] ✓ Chapter "${activeChapterId}" saved successfully`)
+      setSaveStatus('saved')
+      // Reset status after 3 seconds
+      setTimeout(() => setSaveStatus('idle'), 3000)
+    } catch (error) {
+      console.error(`[SAVE] ✗ Failed to save chapter "${activeChapterId}":`, error)
+      setSaveStatus('error')
+    }
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: '#ffffff' }}>
-      <EditorErrorDisplay />
       <DebugPanel
         activeChapterId={activeChapterId}
         chapters={chapters}
         content={content}
-        isSaving={isSaving}
+        saveStatus={saveStatus}
         isLoading={isLoading}
       />
       <Sidebar
@@ -139,23 +191,23 @@ export default function EditorLayout() {
         chapters={chapters}
         isLoading={isLoading}
         onCreateChapter={handleCreateChapter}
+        onDeleteChapter={handleDeleteChapter}
       />
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         <EditorToolbar
           chapterId={activeChapterId || ''}
           chapterTitle={activeChapter?.name || 'Untitled'}
-          wordCount={wordCount}
-          isSaving={isSaving}
+          saveStatus={saveStatus}
           onSave={handleSave}
           onExport={handleExport}
         />
-        {activeChapterId && (
+        {activeChapterId && loadedChapterId === activeChapterId && (
           <EditorArea
             key={activeChapterId}
             chapterId={activeChapterId}
             content={content}
             onChange={(newContent) => {
-              console.log(`[STATE] Content state updated: ${newContent.length} bytes for chapter "${activeChapterId}"`)
+              console.log(`[EDITOR] Content changed: ${newContent.length} bytes`)
               setContent(newContent)
             }}
           />

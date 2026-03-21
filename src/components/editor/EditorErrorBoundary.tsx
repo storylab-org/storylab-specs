@@ -26,20 +26,16 @@ export default class EditorErrorBoundary extends React.Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Suppress Lexical context errors during chapter switches
     if (error.message.includes('Unable to find an active editor')) {
-      console.debug('EditorErrorBoundary: Suppressed Lexical context error during chapter switch')
+      console.debug('EditorErrorBoundary: suppressed Lexical context error during chapter switch')
       return
     }
     console.error('EditorErrorBoundary caught error:', error, errorInfo)
   }
 
   render() {
-    if (this.state.hasError && this.state.error?.message.includes('Unable to find an active editor')) {
-      // For Lexical context errors, render empty while component resets
-      return <div style={{ flex: 1, background: '#f9f9f9' }} />
-    }
-
     if (this.state.hasError) {
-      return <div style={{ padding: '20px', color: 'red' }}>Editor error: {this.state.error?.message}</div>
+      // Render blank fallback for all errors; Lexical resets via key={chapterId}
+      return <div style={{ flex: 1, background: '#f9f9f9' }} />
     }
 
     return this.props.children

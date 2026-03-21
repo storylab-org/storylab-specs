@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './lexical/style.css';
 
-import type { EditorState, LexicalEditor as LexicalEditorType } from 'lexical';
+import type { EditorState } from 'lexical';
 
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -43,14 +43,14 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
   const [wordCount, setWordCount] = useState<number>(0);
   const theme = PlaygroundEditorTheme;
 
-  function onChange(editorState: EditorState, _editor: LexicalEditorType, tags: Set<string>) {
-    // Immediately serialise and report state changes
+  function handleChange(editorState: EditorState) {
     const serialisedState = JSON.stringify(editorState.toJSON());
-    const isInitialisation = tags.has('hydration');
     console.log(
-      `[LEXICAL] Editor state changed ${isInitialisation ? '(init)' : '(user edit)'}: ${serialisedState.length} bytes`
+      `[LEXICAL] onChange callback fired: ${serialisedState.length} bytes`
     );
+    console.log(`[LEXICAL] State: ${serialisedState.substring(0, 100)}`);
     if (onContentChange) {
+      console.log(`[LEXICAL] Calling onContentChange`);
       onContentChange(serialisedState, wordCount);
     }
   }
@@ -97,7 +97,6 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
 
   return (
     <LexicalComposer
-      key={chapterId}
       initialConfig={{
         namespace: chapterId,
         editorState: initialEditorState,
@@ -125,7 +124,7 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
           placeholder={<Placeholder />}
           ErrorBoundary={LexicalErrorBoundary}
         />
-        <OnChangePlugin onChange={onChange} />
+        <OnChangePlugin onChange={handleChange} ignoreSelectionChange={true} />
         <HistoryPlugin />
         <ListPlugin />
         <LinkPlugin />

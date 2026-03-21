@@ -11,3 +11,170 @@
   margin: 0;
   position: 'relative';
 }
+
+.PlaygroundEditorTheme__textBold {
+  font-weight: bold;
+}
+
+.PlaygroundEditorTheme__textItalic {
+  font-style: italic;
+}
+
+.PlaygroundEditorTheme__textUnderline {
+  text-decoration: underline;
+}
+
+.PlaygroundEditorTheme__textStrikethrough {
+  text-decoration: line-through;
+}
+
+.PlaygroundEditorTheme__textSubscript {
+  vertical-align: sub;
+  font-size: 0.9em;
+}
+
+.PlaygroundEditorTheme__textSuperscript {
+  vertical-align: super;
+  font-size: 0.9em;
+}
+
+.PlaygroundEditorTheme__textCode {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 2px 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  border-radius: 2px;
+}
+
+.PlaygroundEditorTheme__textUnderlineStrikethrough {
+  text-decoration: underline line-through;
+}
+
+.PlaygroundEditorTheme__paragraph {
+  margin: 0 0 1em 0;
+}
+
+.PlaygroundEditorTheme__h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0.5em 0 0.3em 0;
+}
+
+.PlaygroundEditorTheme__h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.4em 0 0.2em 0;
+}
+
+.PlaygroundEditorTheme__h3 {
+  font-size: 1.25em;
+  font-weight: bold;
+  margin: 0.3em 0 0.1em 0;
+}
+
+.PlaygroundEditorTheme__h4 {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin: 0.2em 0 0.1em 0;
+}
+
+.PlaygroundEditorTheme__h5 {
+  font-size: 1em;
+  font-weight: bold;
+  margin: 0.2em 0 0.1em 0;
+}
+
+.PlaygroundEditorTheme__h6 {
+  font-size: 0.9em;
+  font-weight: bold;
+  margin: 0.2em 0 0.1em 0;
+}
+
+.PlaygroundEditorTheme__quote {
+  border-left: 4px solid #ccc;
+  padding-left: 1em;
+  margin: 0.5em 0;
+  color: #666;
+  font-style: italic;
+}
+
+.PlaygroundEditorTheme__ul {
+  padding-left: 2em;
+}
+
+.PlaygroundEditorTheme__listItem {
+  margin: 0.2em 0;
+}
+
+.PlaygroundEditorTheme__nestedListItem {
+  margin: 0.1em 0;
+}
+
+.PlaygroundEditorTheme__ol1 {
+  list-style-type: decimal;
+  padding-left: 2em;
+}
+
+.PlaygroundEditorTheme__ol2 {
+  list-style-type: lower-alpha;
+  padding-left: 2em;
+}
+
+.PlaygroundEditorTheme__ol3 {
+  list-style-type: lower-roman;
+  padding-left: 2em;
+}
+
+.PlaygroundEditorTheme__ol4 {
+  list-style-type: decimal;
+  padding-left: 2em;
+}
+
+.PlaygroundEditorTheme__ol5 {
+  list-style-type: lower-alpha;
+  padding-left: 2em;
+}
+
+.PlaygroundEditorTheme__link {
+  color: rgb(33, 111, 219);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.PlaygroundEditorTheme__link:hover {
+  text-decoration: underline;
+}
+
+.PlaygroundEditorTheme__ltr {
+  direction: ltr;
+}
+
+.PlaygroundEditorTheme__rtl {
+  direction: rtl;
+}
+
+.PlaygroundEditorTheme__table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ccc;
+}
+
+.PlaygroundEditorTheme__tableCell {
+  border: 1px solid #ccc;
+  padding: 8px;
+  position: relative;
+  min-width: 50px;
+}
+
+.PlaygroundEditorTheme__tableCellHeader {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.PlaygroundEditorTheme__mark {
+  background-color: yellow;
+}
+
+.PlaygroundEditorTheme__markOverlap {
+  background-color: yellow;
+}

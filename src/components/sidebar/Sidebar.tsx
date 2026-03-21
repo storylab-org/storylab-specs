@@ -8,6 +8,7 @@ interface SidebarProps {
   chapters?: DocumentHead[]
   isLoading?: boolean
   onCreateChapter?: () => void
+  onDeleteChapter?: (id: string) => void
 }
 
 export default function Sidebar({
@@ -15,7 +16,8 @@ export default function Sidebar({
   onSelectChapter,
   chapters = [],
   isLoading = false,
-  onCreateChapter = () => {}
+  onCreateChapter = () => {},
+  onDeleteChapter
 }: SidebarProps) {
   return (
     <aside style={{ width: '200px', flexShrink: 0, borderRight: '1px solid #e5e5e5', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
@@ -26,6 +28,7 @@ export default function Sidebar({
         isLoading={isLoading}
         onSelectChapter={onSelectChapter}
         onCreateChapter={onCreateChapter}
+        onDeleteChapter={onDeleteChapter}
       />
     </aside>
   )
