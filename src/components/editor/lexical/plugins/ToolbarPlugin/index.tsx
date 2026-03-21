@@ -39,6 +39,8 @@ import {
   $setBlocksType,
 } from '@lexical/selection';
 import {$isTableNode, $isTableSelection} from '@lexical/table';
+import {$isDecoratorBlockNode} from '@lexical/react/LexicalDecoratorBlockNode';
+import {INSERT_HORIZONTAL_RULE_COMMAND} from '@lexical/react/LexicalHorizontalRuleNode';
 import {
   $findMatchingParent,
   $getNearestBlockElementAncestorOrThrow,
@@ -69,7 +71,7 @@ import {
   List, ListOrdered, CheckSquare, Quote, Code, Code2,
   Bold, Italic, Underline, Link, Strikethrough, Subscript,
   Superscript, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  Indent, Outdent, MoreHorizontal, RotateCcw, Table2, Palette, Highlighter
+  Indent, Outdent, MoreHorizontal, RotateCcw, Table2, Palette, Highlighter, Minus, Plus
 } from 'lucide-react';
 
 import useModal from '../../hooks/useModal';
@@ -525,6 +527,10 @@ export default function ToolbarPlugin(): JSX.Element {
   }, [editor, $updateToolbar]);
 
   useEffect(() => {
+    setActiveEditor(editor);
+  }, [editor]);
+
+  useEffect(() => {
     return mergeRegister(
       editor.registerEditableListener((editable) => {
         setIsEditable(editable);
@@ -859,12 +865,12 @@ export default function ToolbarPlugin(): JSX.Element {
               <Divider />
             </>
           )}
-          {/*<DropDown
+          <DropDown
             disabled={!isEditable}
             buttonClassName="toolbar-item spaced"
             buttonLabel="Insert"
             buttonAriaLabel="Insert specialized editor node"
-            buttonIconClassName="icon plus">
+            buttonIcon={<Plus size={18} />}>
             <DropDownItem
               onClick={() => {
                 activeEditor.dispatchCommand(
@@ -873,23 +879,10 @@ export default function ToolbarPlugin(): JSX.Element {
                 );
               }}
               className="item">
-              <i className="icon horizontal-rule" />
+              <Minus size={16} />
               <span className="text">Horizontal Rule</span>
             </DropDownItem>
-            <DropDownItem
-              onClick={() => {
-                showModal('Insert Poll', (onClose) => (
-                  <InsertPollDialog
-                    activeEditor={activeEditor}
-                    onClose={onClose}
-                  />
-                ));
-              }}
-              className="item">
-              <i className="icon poll" />
-              <span className="text">Poll</span>
-            </DropDownItem>
-          </DropDown>*/}
+          </DropDown>
         </>
       )}
       <DropDown

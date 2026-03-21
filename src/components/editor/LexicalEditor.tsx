@@ -19,11 +19,14 @@ import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
+import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
+import { TRANSFORMERS } from '@lexical/markdown';
+import { HorizontalRuleNode } from '@lexical/react/LexicalHorizontalRuleNode';
+import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
 
 import AutoLinkPlugin from './lexical/plugins/AutoLinkPlugin';
 import TreeViewPlugin from './lexical/plugins/TreeViewPlugin';
 import FormattingToolbar from './FormattingToolbar';
-// ToolbarPlugin removed - causes "Unable to find active editor" errors on chapter switch
 
 import PlaygroundEditorTheme from './lexical/themes/PlaygroundEditorTheme';
 
@@ -112,6 +115,7 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
           TableRowNode,
           AutoLinkNode,
           LinkNode,
+          HorizontalRuleNode,
         ],
         theme,
         onError,
@@ -129,6 +133,10 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
         <ListPlugin />
         <LinkPlugin />
         <AutoLinkPlugin />
+        {/* LinkClickPlugin disabled - causes "Unable to find active editor" errors during save */}
+        {/* <LinkClickPlugin /> */}
+        <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+        <HorizontalRulePlugin />
         <TreeViewPlugin />
       </div>
       <WordCountPlugin />

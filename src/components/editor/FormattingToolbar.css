@@ -44,6 +44,37 @@
   border-color: #1b6fbc;
 }
 
+.format-btn-block {
+  width: auto;
+  padding: 0 10px;
+  gap: 6px;
+  font-size: 13px;
+  min-width: 110px;
+  justify-content: flex-start;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.item:hover {
+  background: #f0f0f0;
+}
+
+.item.active {
+  color: #0066cc;
+  font-weight: 500;
+}
+
 .separator {
   width: 1px;
   height: 24px;

@@ -7,7 +7,7 @@
 }
 
 .selected-heading {
-  color: var(--ion-color-primary);
+  color: #4a9eff;
 }
 
 .selected-heading-wrapper::before {
@@ -19,8 +19,8 @@
   z-index: 10;
   height: 4px;
   width: 4px;
-  background-color: var(--ion-color-primary);
-  border: solid 4px var(--ion-background-color);
+  background-color: #4a9eff;
+  border: solid 4px #ffffff;
   border-radius: 50%;
 }
 
@@ -37,7 +37,7 @@
 }
 
 .first-heading {
-  color: var(--ion-text-color);
+  color: #111111;
   font-weight: bold;
   cursor: pointer;
 }

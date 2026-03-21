@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND, UNDO_COMMAND, REDO_COMMAND, $getSelection, $isRangeSelection } from 'lexical'
-import { INSERT_UNORDERED_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND } from '@lexical/list'
+import { FORMAT_TEXT_COMMAND, FORMAT_ELEMENT_COMMAND, UNDO_COMMAND, REDO_COMMAND, $getSelection, $isRangeSelection, $createParagraphNode, $isRootOrShadowRoot } from 'lexical'
+import { INSERT_UNORDERED_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND, $isListNode, ListNode } from '@lexical/list'
+import { $createCodeNode } from '@lexical/code'
+import { $createHeadingNode, $isHeadingNode, $createQuoteNode, HeadingTagType } from '@lexical/rich-text'
+import { $setBlocksType } from '@lexical/selection'
+import { $getNearestNodeOfType, $findMatchingParent } from '@lexical/utils'
+import { $isTableSelection } from '@lexical/table'
 import {
   Bold,
   Italic,
@@ -14,18 +19,89 @@ import {
   AlignRight,
   Undo2,
   Redo2,
+  Heading1,
+  Heading2,
+  Heading3,
+  Quote,
+  Code,
 } from 'lucide-react'
+import DropDown, { DropDownItem } from './lexical/ui/DropDown'
 import './FormattingToolbar.css'
+
+type BlockType = 'paragraph' | 'h1' | 'h2' | 'h3' | 'bullet' | 'number' | 'check' | 'quote' | 'code'
 
 export default function FormattingToolbar() {
   const [editor] = useLexicalComposerContext()
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
+  const [blockType, setBlockType] = useState<BlockType>('paragraph')
 
   const handleFormat = useCallback((command: string, arg?: string) => {
     editor.dispatchCommand(command as any, arg as any)
   }, [editor])
+
+  const formatParagraph = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection()
+      if ($isRangeSelection(selection) || $isTableSelection(selection))
+        $setBlocksType(selection, () => $createParagraphNode())
+    })
+  }, [editor])
+
+  const formatHeading = useCallback((tag: HeadingTagType) => {
+    if (blockType !== tag) {
+      editor.update(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection) || $isTableSelection(selection))
+          $setBlocksType(selection, () => $createHeadingNode(tag))
+      })
+    }
+  }, [editor, blockType])
+
+  const formatQuote = useCallback(() => {
+    if (blockType !== 'quote') {
+      editor.update(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection) || $isTableSelection(selection))
+          $setBlocksType(selection, () => $createQuoteNode())
+      })
+    }
+  }, [editor, blockType])
+
+  const formatCode = useCallback(() => {
+    if (blockType !== 'code') {
+      editor.update(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection) || $isTableSelection(selection)) {
+          if (selection.isCollapsed()) {
+            $setBlocksType(selection, () => $createCodeNode())
+          } else {
+            const textContent = selection.getTextContent()
+            const codeNode = $createCodeNode()
+            selection.insertNodes([codeNode])
+            const sel = $getSelection()
+            if ($isRangeSelection(sel)) sel.insertRawText(textContent)
+          }
+        }
+      })
+    }
+  }, [editor, blockType])
+
+  const blockTypeLabels: Record<BlockType, string> = {
+    paragraph: 'Normal', h1: 'Heading 1', h2: 'Heading 2', h3: 'Heading 3',
+    bullet: 'Bullet List', number: 'Numbered List', check: 'Check List',
+    quote: 'Quote', code: 'Code Block',
+  }
+
+  const BlockIcon = ({ type }: { type: BlockType }) => {
+    if (type === 'h1') return <Heading1 size={16} />
+    if (type === 'h2') return <Heading2 size={16} />
+    if (type === 'h3') return <Heading3 size={16} />
+    if (type === 'quote') return <Quote size={16} />
+    if (type === 'code') return <Code size={16} />
+    return <Type size={16} />
+  }
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
@@ -35,6 +111,24 @@ export default function FormattingToolbar() {
           setIsBold(selection.hasFormat('bold'))
           setIsItalic(selection.hasFormat('italic'))
           setIsUnderline(selection.hasFormat('underline'))
+
+          // Detect block type
+          const anchorNode = selection.anchor.getNode()
+          let element = anchorNode.getKey() === 'root'
+            ? anchorNode
+            : $findMatchingParent(anchorNode, (e) => {
+                const parent = e.getParent()
+                return parent !== null && $isRootOrShadowRoot(parent)
+              })
+          if (element === null) element = anchorNode.getTopLevelElementOrThrow()
+
+          if ($isListNode(element)) {
+            const parentList = $getNearestNodeOfType<ListNode>(anchorNode, ListNode)
+            setBlockType((parentList ? parentList.getListType() : element.getListType()) as BlockType)
+          } else {
+            const type = $isHeadingNode(element) ? element.getTag() : element.getType()
+            setBlockType(type as BlockType)
+          }
         }
       })
     })
@@ -57,6 +151,32 @@ export default function FormattingToolbar() {
       >
         <Redo2 size={16} />
       </button>
+
+      <DropDown
+        buttonLabel={blockTypeLabels[blockType]}
+        buttonIcon={<BlockIcon type={blockType} />}
+        buttonClassName="format-btn format-btn-block"
+        buttonAriaLabel="Block format"
+      >
+        <DropDownItem className={`item ${blockType === 'paragraph' ? 'active' : ''}`} onClick={formatParagraph}>
+          <Type size={16} /><span className="text">Normal</span>
+        </DropDownItem>
+        <DropDownItem className={`item ${blockType === 'h1' ? 'active' : ''}`} onClick={() => formatHeading('h1')}>
+          <Heading1 size={16} /><span className="text">Heading 1</span>
+        </DropDownItem>
+        <DropDownItem className={`item ${blockType === 'h2' ? 'active' : ''}`} onClick={() => formatHeading('h2')}>
+          <Heading2 size={16} /><span className="text">Heading 2</span>
+        </DropDownItem>
+        <DropDownItem className={`item ${blockType === 'h3' ? 'active' : ''}`} onClick={() => formatHeading('h3')}>
+          <Heading3 size={16} /><span className="text">Heading 3</span>
+        </DropDownItem>
+        <DropDownItem className={`item ${blockType === 'quote' ? 'active' : ''}`} onClick={formatQuote}>
+          <Quote size={16} /><span className="text">Quote</span>
+        </DropDownItem>
+        <DropDownItem className={`item ${blockType === 'code' ? 'active' : ''}`} onClick={formatCode}>
+          <Code size={16} /><span className="text">Code Block</span>
+        </DropDownItem>
+      </DropDown>
 
       <div className="separator" />
 

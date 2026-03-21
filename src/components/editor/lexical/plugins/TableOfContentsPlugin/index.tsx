@@ -5,16 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-import type {TableOfContentsEntry} from '@lexical/react/LexicalTableOfContents';
 import type {HeadingTagType} from '@lexical/rich-text';
 import type {NodeKey} from 'lexical';
 
 import './index.css';
 
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import LexicalTableOfContents from '@lexical/react/LexicalTableOfContents';
 import {useEffect, useRef, useState} from 'react';
 import * as React from 'react';
+
+// TODO: LexicalTableOfContents is not exported from @lexical/react v0.41.0
+// This type stub is used until the plugin can be properly imported
+type TableOfContentsEntry = {
+  key: string;
+  level: number;
+  text?: string;
+};
+type LexicalTableOfContents = any; // Stub type until proper import is available
 
 const MARGIN_ABOVE_EDITOR = 624;
 const HEADING_WIDTH = 9;
