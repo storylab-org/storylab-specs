@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Sidebar from '@/components/sidebar/Sidebar'
 import EditorArea from '@/components/editor/EditorArea'
 import EditorToolbar from '@/components/editor/EditorToolbar'
 import DebugPanel from '@/components/editor/DebugPanel'
+import GenericModal from '@/components/shared/GenericModal'
+import ChapterSettingsModal from '@/components/editor/ChapterSettingsModal'
 import {
   listDocuments,
   getDocument,
@@ -15,6 +17,10 @@ import { exportBook, triggerDownload, type ExportFormat } from '@/api/export'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
+interface ChapterSettings {
+  pageBackground: string
+}
+
 export default function EditorLayout() {
   const [chapters, setChapters] = useState<DocumentHead[]>([])
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
@@ -23,6 +29,10 @@ export default function EditorLayout() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadedChapterId, setLoadedChapterId] = useState<string | null>(null)
   const [wordCount, setWordCount] = useState(0)
+  const [isDirty, setIsDirty] = useState(false)
+  const [chapterSettings, setChapterSettings] = useState<Record<string, ChapterSettings>>({})
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeChapter = chapters.find((c) => c.id === activeChapterId)
 
@@ -69,6 +79,16 @@ export default function EditorLayout() {
         console.log(`[LOAD] ✓ Loaded chapter "${activeChapterId}" (name: "${doc.name}", ${doc.content.length} bytes)`)
         setContent(doc.content)
         setLoadedChapterId(activeChapterId)
+
+        // Load chapter settings from localStorage
+        const savedSettings = localStorage.getItem(`chapter-settings-${activeChapterId}`)
+        if (savedSettings) {
+          try {
+            setChapterSettings(prev => ({ ...prev, [activeChapterId]: JSON.parse(savedSettings) }))
+          } catch (e) {
+            console.warn(`[LOAD] Failed to parse chapter settings: ${e}`)
+          }
+        }
       } catch (error) {
         console.error(`[LOAD] ✗ Failed to load chapter "${activeChapterId}":`, error)
         setContent('')
@@ -81,7 +101,7 @@ export default function EditorLayout() {
     loadDocument()
   }, [activeChapterId])
 
-  // Auto-save when content changes (OnChangePlugin updates state immediately)
+  // Reset save status to idle after 3 seconds
   useEffect(() => {
     if (saveStatus === 'saved') {
       // Reset to idle after 3 seconds
@@ -90,8 +110,26 @@ export default function EditorLayout() {
     }
   }, [saveStatus])
 
+  // Autosave: trigger save after 5 seconds of inactivity if content is dirty
+  useEffect(() => {
+    if (!isDirty) return
+
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+
+    autosaveTimerRef.current = setTimeout(() => {
+      handleSave()
+    }, 5000)
+
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+    }
+  }, [isDirty, content])
+
   const handleSelectChapter = (id: string) => {
     console.log(`[SWITCH] Switching to chapter "${id}"`)
+    // Cancel any pending autosave for the previous chapter
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+    setIsDirty(false)
     setActiveChapterId(id)
   }
 
@@ -181,12 +219,22 @@ export default function EditorLayout() {
       await updateDocument(activeChapterId, content)
       console.log(`[SAVE] ✓ Chapter "${activeChapterId}" saved successfully`)
       setSaveStatus('saved')
+      setIsDirty(false)
       // Reset status after 3 seconds
       setTimeout(() => setSaveStatus('idle'), 3000)
     } catch (error) {
       console.error(`[SAVE] ✗ Failed to save chapter "${activeChapterId}":`, error)
       setSaveStatus('error')
     }
+  }
+
+  const handleSettingsChange = (key: string, value: string) => {
+    if (!activeChapterId) return
+
+    const updated = { ...(chapterSettings[activeChapterId] ?? { pageBackground: '#f9f9f9' }), [key]: value }
+    setChapterSettings(prev => ({ ...prev, [activeChapterId]: updated }))
+    localStorage.setItem(`chapter-settings-${activeChapterId}`, JSON.stringify(updated))
+    console.log(`[SETTINGS] Updated chapter "${activeChapterId}" ${key} to ${value}`)
   }
 
   return (
@@ -212,6 +260,7 @@ export default function EditorLayout() {
           chapterTitle={activeChapter?.name || 'Untitled'}
           saveStatus={saveStatus}
           onSave={handleSave}
+          onSettings={() => setIsSettingsOpen(true)}
           onExport={handleExport}
         />
         {activeChapterId && loadedChapterId === activeChapterId && (
@@ -219,9 +268,11 @@ export default function EditorLayout() {
             key={activeChapterId}
             chapterId={activeChapterId}
             content={content}
+            pageBackground={chapterSettings[activeChapterId]?.pageBackground ?? '#f9f9f9'}
             onChange={(newContent) => {
               console.log(`[EDITOR] Content changed: ${newContent.length} bytes`)
               setContent(newContent)
+              setIsDirty(true)
             }}
             onWordCountChange={setWordCount}
           />
@@ -230,6 +281,34 @@ export default function EditorLayout() {
           {wordCount} words
         </div>
       </div>
+
+      <GenericModal
+        isOpen={isSettingsOpen && !!activeChapterId}
+        onClose={() => setIsSettingsOpen(false)}
+        title="Chapter Settings"
+        closeOnClickOutside={true}
+      >
+        {activeChapterId && (
+          <ChapterSettingsModal
+            chapterName={activeChapter?.name || 'Untitled'}
+            onNameChange={async (name) => {
+              if (activeChapterId) {
+                try {
+                  console.log(`[SETTINGS] Updating chapter name to "${name}"`)
+                  await updateDocument(activeChapterId, content, name)
+                  console.log(`[SETTINGS] ✓ Chapter name updated`)
+                  // Update the chapters list with the new name
+                  setChapters(chapters.map(c => c.id === activeChapterId ? { ...c, name } : c))
+                } catch (error) {
+                  console.error(`[SETTINGS] ✗ Failed to update chapter name:`, error)
+                }
+              }
+            }}
+            initialBackground={chapterSettings[activeChapterId]?.pageBackground ?? '#f9f9f9'}
+            onChange={(bg) => handleSettingsChange('pageBackground', bg)}
+          />
+        )}
+      </GenericModal>
     </div>
   )
 }

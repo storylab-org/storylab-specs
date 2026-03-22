@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Download, AlertCircle, Save } from 'lucide-react';
+import { Check, Download, AlertCircle, Save, Settings } from 'lucide-react';
 import './EditorToolbar.css';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -9,6 +9,7 @@ interface EditorToolbarProps {
   chapterTitle?: string;
   onExport?: (format: 'markdown' | 'html' | 'epub' | 'pdf') => void;
   onSave?: () => void;
+  onSettings?: () => void;
   saveStatus?: SaveStatus;
 }
 
@@ -17,6 +18,7 @@ export default function EditorToolbar({
   chapterTitle = 'Untitled',
   onExport,
   onSave,
+  onSettings,
   saveStatus = 'idle',
 }: EditorToolbarProps) {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -25,7 +27,17 @@ export default function EditorToolbar({
     <div className="editor-toolbar">
       <div className="toolbar-section toolbar-left">
         <div className="chapter-info">
-          <h2 className="chapter-title">{chapterTitle}</h2>
+          <div className="chapter-title-row">
+            <h2 className="chapter-title">{chapterTitle}</h2>
+            <button
+              className="chapter-settings-button"
+              onClick={onSettings}
+              aria-label="Chapter settings"
+              title="Chapter settings"
+            >
+              <Settings size={16} />
+            </button>
+          </div>
           {chapterId && <span className="chapter-id">Chapter {chapterId}</span>}
         </div>
       </div>

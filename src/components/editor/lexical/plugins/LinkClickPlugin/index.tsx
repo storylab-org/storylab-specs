@@ -4,12 +4,16 @@
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { CLICK_COMMAND } from 'lexical';
-import { useEffect } from 'react';
-import useModal from '../../hooks/useModal';
+import { useEffect, useState } from 'react';
+import GenericModal from '@/components/shared/GenericModal';
+import ModalActions from '@/components/shared/ModalActions';
 
 export default function LinkClickPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
-  const [modal, showModal] = useModal();
+  const [linkModal, setLinkModal] = useState<{ isOpen: boolean; href: string }>({
+    isOpen: false,
+    href: '',
+  });
 
   useEffect(() => {
     return editor.registerCommand(
@@ -34,57 +38,42 @@ export default function LinkClickPlugin(): JSX.Element | null {
         payload.preventDefault();
 
         // Show confirmation dialog
-        showModal('Open Link', (onClose: () => void) => (
-          <div style={{ padding: '16px', fontSize: '14px' }}>
-            <p>Do you want to open this link?</p>
-            <p style={{ wordBreak: 'break-all', color: '#666', fontSize: '12px', marginTop: '8px' }}>
-              {href}
-            </p>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-              <button
-                onClick={() => {
-                  window.open(href, '_blank', 'noopener,noreferrer');
-                  onClose();
-                }}
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  background: '#0066cc',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                }}
-              >
-                Open
-              </button>
-              <button
-                onClick={onClose}
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  background: '#f5f5f5',
-                  color: '#1a1a1a',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ));
+        setLinkModal({ isOpen: true, href });
 
         return true;
       },
       1
     );
-  }, [editor, showModal]);
+  }, [editor]);
 
-  return modal;
+  const handleOpenLink = () => {
+    window.open(linkModal.href, '_blank', 'noopener,noreferrer');
+    setLinkModal({ ...linkModal, isOpen: false });
+  };
+
+  const handleCloseModal = () => {
+    setLinkModal({ ...linkModal, isOpen: false });
+  };
+
+  return (
+    <GenericModal
+      isOpen={linkModal.isOpen}
+      onClose={handleCloseModal}
+      title="Open Link"
+      closeOnClickOutside={true}
+    >
+      <div style={{ fontSize: '14px' }}>
+        <p>Do you want to open this link?</p>
+        <p style={{ wordBreak: 'break-all', color: '#666', fontSize: '12px', marginTop: '8px' }}>
+          {linkModal.href}
+        </p>
+        <ModalActions
+          actions={[
+            { label: 'Open', onClick: handleOpenLink, variant: 'primary' },
+            { label: 'Cancel', onClick: handleCloseModal },
+          ]}
+        />
+      </div>
+    </GenericModal>
+  );
 }
