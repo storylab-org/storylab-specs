@@ -7,7 +7,7 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 interface EditorToolbarProps {
   chapterId?: string;
   chapterTitle?: string;
-  onExport?: (format: 'markdown' | 'html' | 'pdf') => void;
+  onExport?: (format: 'markdown' | 'html' | 'epub' | 'pdf') => void;
   onSave?: () => void;
   saveStatus?: SaveStatus;
 }
@@ -76,6 +76,15 @@ export default function EditorToolbar({
                 }}
               >
                 HTML
+              </button>
+              <button
+                className="export-menu-item"
+                onClick={() => {
+                  onExport?.('epub');
+                  setExportMenuOpen(false);
+                }}
+              >
+                EPUB
               </button>
               <button
                 className="export-menu-item"

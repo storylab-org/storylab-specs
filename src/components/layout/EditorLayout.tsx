@@ -11,6 +11,7 @@ import {
   deleteDocument,
   type DocumentHead
 } from '@/api/documents'
+import { exportBook, triggerDownload, type ExportFormat } from '@/api/export'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -152,9 +153,21 @@ export default function EditorLayout() {
     }
   }
 
-  const handleExport = (format: 'markdown' | 'html' | 'pdf') => {
-    // TODO: Implement export functionality
-    console.log('Exporting as:', format, content)
+  const handleExport = async (format: 'markdown' | 'html' | 'epub' | 'pdf') => {
+    if (format === 'pdf') {
+      console.log('PDF export not yet implemented')
+      return
+    }
+
+    try {
+      console.log(`[EXPORT] Starting ${format.toUpperCase()} export...`)
+      const blob = await exportBook(format as ExportFormat)
+      const filename = `book.${format}`
+      triggerDownload(blob, filename)
+      console.log(`[EXPORT] ✓ ${format.toUpperCase()} export completed`)
+    } catch (error) {
+      console.error(`[EXPORT] ✗ Failed to export ${format}:`, error)
+    }
   }
 
   const handleSave = async () => {
