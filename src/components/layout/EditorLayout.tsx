@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import Sidebar from '@/components/sidebar/Sidebar'
 import EditorArea from '@/components/editor/EditorArea'
 import EditorToolbar from '@/components/editor/EditorToolbar'
-import DebugPanel from '@/components/editor/DebugPanel'
 import GenericModal from '@/components/shared/GenericModal'
 import ChapterSettingsModal from '@/components/editor/ChapterSettingsModal'
 import {
@@ -274,13 +273,6 @@ export default function EditorLayout() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: '#ffffff' }}>
-      <DebugPanel
-        activeChapterId={activeChapterId}
-        chapters={chapters}
-        content={content}
-        saveStatus={saveStatus}
-        isLoading={isLoading}
-      />
       <Sidebar
         activeChapterId={activeChapterId || ''}
         onSelectChapter={handleSelectChapter}

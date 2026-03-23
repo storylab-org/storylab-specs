@@ -2,10 +2,6 @@
   border-radius: 4px;
   padding: 4px;
   cursor: grab;
-  opacity: 0.75 !important;
-  position: absolute;
-  left: 0;
-  top: 0;
   will-change: transform, opacity;
   display: flex;
   align-items: center;
