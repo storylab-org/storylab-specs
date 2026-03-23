@@ -10,6 +10,7 @@ export interface DocumentHead {
   cid: string
   createdAt: string
   updatedAt: string
+  order: number
 }
 
 export interface ResolvedDocument extends DocumentHead {
@@ -22,6 +23,7 @@ export interface DocumentStore {
   create(name: string, content: string): Promise<DocumentHead>
   update(id: string, content: string, name?: string): Promise<DocumentHead>
   remove(id: string): Promise<void>
+  reorderDocuments(orderedIds: string[]): Promise<void>
 }
 
 export function createDocumentStore(blockstore: Blockstore, headsRoot?: string): DocumentStore {
@@ -47,6 +49,13 @@ export function createDocumentStore(blockstore: Blockstore, headsRoot?: string):
         const path = join(root, file)
         const data = await readFile(path, 'utf-8')
         const head = JSON.parse(data) as DocumentHead
+
+        // Migration: if document lacks order, use createdAt timestamp as order
+        if (head.order === undefined) {
+          head.order = new Date(head.createdAt).getTime()
+          await saveHead(head)
+        }
+
         heads.push(head)
       } catch {
         // Skip corrupted files
@@ -54,10 +63,8 @@ export function createDocumentStore(blockstore: Blockstore, headsRoot?: string):
       }
     }
 
-    // Sort by updatedAt descending
-    return heads.sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    )
+    // Sort by order ascending
+    return heads.sort((a, b) => a.order - b.order)
   }
 
   const getHead = async (id: string): Promise<DocumentHead | null> => {
@@ -102,7 +109,8 @@ export function createDocumentStore(blockstore: Blockstore, headsRoot?: string):
       name,
       cid,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      order: Date.now()
     }
 
     await saveHead(head)
@@ -140,11 +148,25 @@ export function createDocumentStore(blockstore: Blockstore, headsRoot?: string):
     await unlink(path)
   }
 
+  const reorderDocuments = async (orderedIds: string[]): Promise<void> => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      const id = orderedIds[i]
+      const head = await getHead(id)
+      if (!head) {
+        throw new Error(`Document ${id} not found`)
+      }
+
+      head.order = i
+      await saveHead(head)
+    }
+  }
+
   return {
     list,
     get,
     create,
     update,
-    remove
+    remove,
+    reorderDocuments
   }
 }

@@ -21,7 +21,8 @@ describe('documents API', () => {
           name: 'Chapter 1',
           cid: 'abc123',
           createdAt: '2026-03-20T00:00:00Z',
-          updatedAt: '2026-03-20T00:00:00Z'
+          updatedAt: '2026-03-20T00:00:00Z',
+          order: 0
         }
       ]
 
@@ -55,7 +56,8 @@ describe('documents API', () => {
         cid: 'abc123',
         content: 'Hello, world!',
         createdAt: '2026-03-20T00:00:00Z',
-        updatedAt: '2026-03-20T00:00:00Z'
+        updatedAt: '2026-03-20T00:00:00Z',
+        order: 0
       }
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -87,7 +89,8 @@ describe('documents API', () => {
         name: 'New Chapter',
         cid: 'def456',
         createdAt: '2026-03-20T00:00:00Z',
-        updatedAt: '2026-03-20T00:00:00Z'
+        updatedAt: '2026-03-20T00:00:00Z',
+        order: 0
       }
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -123,7 +126,8 @@ describe('documents API', () => {
         name: 'Updated Chapter',
         cid: 'ghi789',
         createdAt: '2026-03-20T00:00:00Z',
-        updatedAt: '2026-03-20T01:00:00Z'
+        updatedAt: '2026-03-20T01:00:00Z',
+        order: 0
       }
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -148,7 +152,8 @@ describe('documents API', () => {
         name: 'Chapter 1',
         cid: 'ghi789',
         createdAt: '2026-03-20T00:00:00Z',
-        updatedAt: '2026-03-20T01:00:00Z'
+        updatedAt: '2026-03-20T01:00:00Z',
+        order: 0
       }
 
       global.fetch = vi.fn().mockResolvedValueOnce({

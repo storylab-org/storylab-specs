@@ -69,6 +69,29 @@ const documentsRoute: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  // PATCH /documents/reorder - Reorder documents
+  fastify.patch<{ Body: { ids: string[] } }>(
+    '/documents/reorder',
+    async (request, reply) => {
+      const { ids } = request.body
+      request.log.debug({ count: ids.length }, 'reordering documents')
+
+      try {
+        await fastify.documentStore.reorderDocuments(ids)
+        request.log.info({ count: ids.length }, 'documents reordered')
+        reply.code(204)
+        return null
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        if (message.includes('not found')) {
+          request.log.warn({ ids }, 'document not found during reorder')
+          return reply.notFound('One or more documents not found')
+        }
+        throw error
+      }
+    }
+  )
+
   // DELETE /documents/:id - Delete a document
   fastify.delete<{ Params: { id: string } }>(
     '/documents/:id',

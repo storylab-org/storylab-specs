@@ -11,6 +11,7 @@ import {
   createDocument,
   updateDocument,
   deleteDocument,
+  reorderDocuments,
   type DocumentHead
 } from '@/api/documents'
 import { exportBook, triggerDownload, type ExportFormat } from '@/api/export'
@@ -235,6 +236,32 @@ export default function EditorLayout() {
     console.log(`[SETTINGS] Updated chapter "${activeChapterId}" ${key} to ${value}`)
   }
 
+  const handleReorder = async (reorderedChapters: DocumentHead[]) => {
+    console.log('[REORDER] Reordering chapters...')
+    // Optimistic update with updated order indices
+    const chaptersWithNewOrder = reorderedChapters.map((chapter, index) => ({
+      ...chapter,
+      order: index
+    }))
+    setChapters(chaptersWithNewOrder)
+
+    // Persist to server
+    try {
+      const orderedIds = reorderedChapters.map(c => c.id)
+      await reorderDocuments(orderedIds)
+      console.log('[REORDER] ✓ Chapters reordered successfully')
+    } catch (error) {
+      console.error('[REORDER] ✗ Failed to reorder chapters:', error)
+      // Refresh from server on error
+      try {
+        const docs = await listDocuments()
+        setChapters(docs)
+      } catch (e) {
+        console.error('[REORDER] ✗ Failed to refresh chapters after reorder error:', e)
+      }
+    }
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: '#ffffff' }}>
       <DebugPanel
@@ -247,10 +274,11 @@ export default function EditorLayout() {
       <Sidebar
         activeChapterId={activeChapterId || ''}
         onSelectChapter={handleSelectChapter}
-        chapters={[...chapters].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())}
+        chapters={[...chapters].sort((a, b) => a.order - b.order)}
         isLoading={isLoading}
         onCreateChapter={handleCreateChapter}
         onDeleteChapter={handleDeleteChapter}
+        onReorder={handleReorder}
       />
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
         <EditorToolbar

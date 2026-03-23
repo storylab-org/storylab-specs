@@ -4,6 +4,7 @@ export interface DocumentHead {
   cid: string
   createdAt: string
   updatedAt: string
+  order: number
 }
 
 export interface ResolvedDocument extends DocumentHead {
@@ -58,6 +59,15 @@ export async function updateDocument(id: string, content: string, name?: string)
 export async function deleteDocument(id: string): Promise<void> {
   const response = await fetch(`${API_BASE}/documents/${id}`, {
     method: 'DELETE'
+  })
+  await handleResponse<void>(response)
+}
+
+export async function reorderDocuments(ids: string[]): Promise<void> {
+  const response = await fetch(`${API_BASE}/documents/reorder`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids })
   })
   await handleResponse<void>(response)
 }
