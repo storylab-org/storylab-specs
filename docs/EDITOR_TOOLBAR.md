@@ -1,7 +1,7 @@
 # Editor Toolbar Guide
 
-**Last Updated:** March 2026
-**Version:** Storylab v0.1.23
+**Last Updated:** March 24, 2026
+**Version:** Storylab v0.1.53
 
 ## Overview
 
@@ -49,6 +49,37 @@ Toggle on/off by clicking the button while in a list.
 - **Align Left** — Left-align text (default)
 - **Align Centre** — Centre-align text
 - **Align Right** — Right-align text
+
+### 6. Block Drag-and-Drop ⭐ (NEW - v0.1.53)
+
+**Reorder document blocks by dragging:**
+- Hover over any block in the editor to reveal a **grip handle** (≡) on the left
+- Click and drag the handle to reorder blocks
+- A **blue drop line** appears showing where the block will land
+- Release to reorder blocks
+- Works in both web browser and Tauri desktop app
+
+**How it works:**
+- Uses **dnd-kit** with Pointer Events (not HTML5 Drag API)
+- Compatible with Tauri WebKit limitations (fixed in v0.1.53)
+- Keyboard support: Use arrow keys with focused handle
+- Toggle visibility in Chapter Settings → "Show drag menu button"
+
+**Technical details:**
+- File: `src/components/editor/lexical/plugins/DragDropBlockPlugin.tsx`
+- Uses `useSortable` hook from dnd-kit for collision detection
+- Integrates with Lexical's `insertBefore`/`insertAfter` for reordering
+- Drop indicator line styled in `DragDropBlockPlugin.css`
+
+---
+
+## Sticky Toolbar ⭐ (NEW - v0.1.53)
+
+The formatting toolbar now **sticks to the top** of the editor as you scroll:
+- Toolbar stays visible for quick access to formatting controls
+- Implemented via CSS `position: sticky; top: 0; z-index: 100;`
+- Prevents need to scroll back up to access formatting buttons
+- Improves UX for long documents
 
 ---
 
@@ -98,9 +129,14 @@ Text renders with `font-weight: bold`
 ### File Structure
 ```
 src/components/editor/
-├── FormattingToolbar.tsx       ← Main toolbar component
+├── FormattingToolbar.tsx       ← Main toolbar component (sticky)
 ├── FormattingToolbar.css       ← Toolbar styles
+├── EditorToolbar.tsx           ← Top toolbar (Save, Export, Settings)
+├── EditorToolbar.css           ← Top toolbar styles
 └── lexical/
+    ├── plugins/
+    │   ├── DragDropBlockPlugin.tsx  ← Block reordering with dnd-kit
+    │   └── DragDropBlockPlugin.css  ← Drop indicator line styles
     ├── ui/
     │   ├── DropDown.tsx        ← Reusable dropdown component
     │   └── DropDown.tsx        ← Used by block type selector
@@ -238,6 +274,32 @@ Current test status: **29 tests passing** (as of v0.1.23)
 
 ---
 
+## Tauri Drag-and-Drop Configuration ⭐ (NEW - v0.1.53)
+
+**Why drag-and-drop in Tauri required special handling:**
+
+Tauri's WebKit engine has a built-in file-drop handler (`dragDropEnabled: true` by default) that **intercepts OS drag events before they reach the WebView DOM**, preventing the HTML5 Drag API from working.
+
+**Solution implemented:**
+1. Set `dragDropEnabled: false` in `src-tauri/tauri.conf.json` window config to disable Tauri's interception
+2. Switched block drag-and-drop from Lexical's experimental HTML5 plugin to **dnd-kit** with **Pointer Events**
+3. Pointer Events operate at the browser level and are unaffected by OS-level event interception
+
+**Configuration:**
+```json
+// src-tauri/tauri.conf.json
+"app": {
+  "windows": [{
+    "title": "storylab",
+    "width": 1100,
+    "height": 800,
+    "dragDropEnabled": false  // ← Disables Tauri's file-drop handler
+  }]
+}
+```
+
+---
+
 ## Known Limitations
 
 1. **Alignment requires selection** — Alignment commands work best with selected text or blocks. Without selection, behaviour may vary.
@@ -265,6 +327,9 @@ Planned features (in order of priority for book writing):
 ## References
 
 - **Lexical Docs:** https://lexical.dev
+- **dnd-kit Docs:** https://docs.dndkit.com
 - **FormattingToolbar source:** `src/components/editor/FormattingToolbar.tsx`
+- **DragDropBlockPlugin source:** `src/components/editor/lexical/plugins/DragDropBlockPlugin.tsx`
 - **DropDown component:** `src/components/editor/lexical/ui/DropDown.tsx`
 - **Theme config:** `src/components/editor/lexical/themes/PlaygroundEditorTheme.ts`
+- **Tauri config:** `src-tauri/tauri.conf.json`
