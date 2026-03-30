@@ -4,9 +4,9 @@ Core documentation for the Storylab platform: vision, architecture, key decision
 
 ## 📚 Documentation
 
-- **[PRODUCT-SPEC.md](docs/product-spec.md)** — Why Storylab exists, target audience, strategy, and three-phase roadmap (Foundation → Distribution → Ecosystem)
-- **[TECHNICAL-SPEC.md](docs/technical-spec.md)** — System architecture, core concepts (Story, Keys, CID), access control, key flows, design principles
-- **[TODOS.md](docs/todos.md)** — Open questions and blocking tasks, ordered by dependency
+- **[PRODUCT-SPEC.md](docs/PRODUCT-SPEC.md)** — Why Storylab exists, target audience, strategy, and three-phase roadmap (Foundation → Distribution → Ecosystem)
+- **[TECHNICAL-SPEC.md](docs/TECHNICAL-SPEC.md)** — System architecture, core concepts (Story, Keys, CID), access control, key flows, design principles
+- **[TODOS.md](docs/TODOS.md)** — Open questions and blocking tasks, ordered by dependency
 
 ## 🏗️ Architecture Overview
 
@@ -28,7 +28,7 @@ Storylab is a decentralised, platform-agnostic system composed of three pieces:
 - [ ] Build Reader
 - [ ] Publish format spec
 
-See [TODOS.md](docs/todos.md) for detailed blockers and next steps.
+See [TODOS.md](docs/TODOS.md) for detailed blockers and next steps.
 
 ## 📂 Implementation Repos
 
