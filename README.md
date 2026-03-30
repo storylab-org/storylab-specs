@@ -1,94 +1,45 @@
-# Storylab
+# Storylab — Product & Technical Specifications
 
-A desktop book editor built with Tauri, React, TypeScript, and Fastify. Write novels with a beautiful, distraction-free interface.
+Core documentation for the Storylab platform: vision, architecture, key decisions, and development roadmap.
 
-## Quick Start
+## 📚 Documentation
 
-```bash
-# Install dependencies
-npm install && npm install --prefix server
+- **[PRODUCT-SPEC.md](docs/product-spec.md)** — Why Storylab exists, target audience, strategy, and three-phase roadmap (Foundation → Distribution → Ecosystem)
+- **[TECHNICAL-SPEC.md](docs/technical-spec.md)** — System architecture, core concepts (Story, Keys, CID), access control, key flows, design principles
+- **[TODOS.md](docs/todos.md)** — Open questions and blocking tasks, ordered by dependency
 
-# Start development
-npm run tauri dev
-```
+## 🏗️ Architecture Overview
 
-The app opens with:
-- React frontend on port 1420 (Tauri webview)
-- Fastify server on port 3000
-- Tauri window managing everything
+Storylab is a decentralised, platform-agnostic system composed of three pieces:
 
-## Features
+1. **Editor** — Authors write and manage stories ([storylab-editor-js](https://github.com/storylab-org/storylab-editor-js))
+2. **Reader** — Readers validate keys and access stories
+3. **Marketplace** — Optional hub for discovery and key distribution
 
-- **Book Editor Landing Page** — Clean, minimalist interface for writing
-  - 200px sidebar with chapter navigation
-  - Mock text editor (textarea) styled as a page
-  - Formatting toolbar (Bold, Italic, Underline, Strikethrough, Headings)
-  - Live word count tracker
-  - Responsive desktop layout
+**Core principle:** Authors own their content; access is portable; no single platform can revoke either.
 
-## Architecture
+## 🚀 Current Phase
 
-**Three-layer desktop application:**
+**Phase 1 — Foundation**
+- [x] Define product vision
+- [x] Define technical architecture
+- [ ] Stabilise story format (blocking all other work)
+- [ ] Build Editor (in progress)
+- [ ] Build Reader
+- [ ] Publish format spec
 
-1. **React Frontend** (`src/`) → Runs in Tauri webview
-2. **Fastify Server** (`server/`) → Node.js sidecar, HTTP API on port 3000
-3. **Tauri/Rust** (`src-tauri/`) → Desktop app shell, spawns and manages sidecar
+See [TODOS.md](docs/todos.md) for detailed blockers and next steps.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture.
+## 📂 Implementation Repos
 
-## Development
+- **[storylab-editor-js](https://github.com/storylab-org/storylab-editor-js)** — Editor implementation (React + Tauri)
+- **[storylab-reader-js](https://github.com/storylab-org/storylab-reader-js)** — Reader implementation (coming Phase 2)
+- **[storylab-marketplace](https://github.com/storylab-org/storylab-marketplace)** — Marketplace (coming Phase 2)
 
-### Common Commands
+## 🤝 Contributing
 
-| Command | Purpose |
-|---------|---------|
-| `npm run tauri dev` | Start full dev environment |
-| `npm run build` | Build production binary |
-| `npm test` | Run all tests (frontend + server + Rust) |
-| `npm run test:frontend` | Run React tests with Vitest |
+All repos follow the same contribution workflow. See the implementation repo's README and `CLAUDE.md` for development setup.
 
-### Key Ports
+---
 
-- **1420** → Vite dev server (frontend)
-- **3000** → Fastify server (backend)
-- **1421** → Vite HMR (hot reload)
-
-## Component Structure
-
-```
-src/components/
-├── layout/
-│   └── EditorLayout.tsx     # Root layout (sidebar + editor)
-├── sidebar/
-│   ├── Sidebar.tsx
-│   ├── SidebarHeader.tsx
-│   └── ChapterList.tsx      # Mock chapters
-└── editor/
-    ├── EditorArea.tsx
-    ├── EditorToolbar.tsx
-    └── EditorMock.tsx       # Mock textarea (will be replaced with Lexical)
-```
-
-## Testing
-
-- **Frontend**: Vitest + React Testing Library
-  - `npm run test:frontend` — Run all frontend tests
-  - Tests verify: chapter navigation, editor UI, word count, toolbar buttons
-
-- **Server**: node:test + Fastify
-  - `npm run test:server`
-
-- **Rust**: Cargo tests
-  - `npm run test:rust`
-
-## IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
-
-## Documentation
-
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — System design and data flow
-- [DEVELOPMENT.md](docs/DEVELOPMENT.md) — Development workflow and debugging
-- [TESTING.md](docs/TESTING.md) — Testing guide for all three layers
-- [SIDECAR.md](docs/SIDECAR.md) — Fastify server setup and routes
-- [BUILDING.md](docs/BUILDING.md) — Building for production
+**Questions?** Open an [issue](https://github.com/storylab-org/storylab-specs/issues) or check the [discussions](https://github.com/storylab-org/storylab-specs/discussions).
